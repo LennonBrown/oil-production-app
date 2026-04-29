@@ -1,0 +1,43 @@
+<!-- app/templates/base.html -->
+<!-- This is the base template that all other templates extend. -->
+<!-- It defines the shared layout - header, nav, footer. -->
+<!-- Other templates use 'block' tags to inject their own content. -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- block title lets each page set its own browser tab title -->
+    <title>{% block title %}OilTracker{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <!-- Navigation bar shown on every page -->
+    <nav>
+        <!-- Site name with CSS oil drop logo on the left -->
+        <span class="site-name">
+            <span class="oil-drop"></span>
+            OilTracker
+        </span>
+
+        <!-- Navigation links -->
+        <a href="{{ url_for('main.index') }}">Home</a>
+        <a href="{{ url_for('main.compare') }}">Compare Countries</a>
+    </nav>
+
+    <!-- Main content area -->
+    <!-- Each child template fills this block with its own content -->
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Footer shown on every page -->
+    <footer>
+        <p>Data source: U.S. Energy Information Administration</p>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!-- app/templates/country.html -->
+<!-- Detail page for a single country. -->
+<!-- Shows all yearly production data and statistics. -->
+
+{% extends 'base.html' %}
+
+{% block title %}{{ country.name }} - Oil Production{% endblock %}
+
+{% block content %}
+
+    <!-- Country header -->
+    <div>
+        {% if country.flag_url %}
+            <img src="{{ country.flag_url }}"
+                 alt="{{ country.name }} flag"
+                 width="60">
+        {% endif %}
+        <h1>{{ country.name }}</h1>
+    </div>
+
+    <!-- Statistics summary -->
+    <h2>Statistics</h2>
+    <table>
+        <tr>
+            <th>Average Production</th>
+            <td>{{ country.avg_production() }} thousand barrels/day</td>
+        </tr>
+        <tr>
+            <th>Peak Production Year</th>
+            <td>
+                {% if country.peak_production() %}
+                    {{ country.peak_production().year }}
+                    ({{ country.peak_production().production }}
+                    thousand barrels/day)
+                {% else %}
+                    No data available
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <th>Total Years Recorded</th>
+            <td>{{ productions|length }}</td>
+        </tr>
+    </table>
+
+    <!-- Yearly production data -->
+    <h2>Yearly Production Data</h2>
+    {% if productions %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Year</th>
+                    <th>Production (thousand barrels/day)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in productions %}
+                <tr>
+                    <td>{{ record.year }}</td>
+                    <td>
+                        {% if record.production %}
+                            {{ record.production }}
+                        {% else %}
+                            No data
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No production data available for this country.</p>
+    {% endif %}
+
+    <!-- Comparison with top 5 producers -->
+    <h2>How does {{ country.name }} compare?</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Country</th>
+                <th>Avg Production (thousand barrels/day)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in top_countries %}
+            <tr>
+                <!-- Highlight the current country in the comparison -->
+                {% if c.id == country.id %}
+                <tr style="font-weight: bold;">
+                {% endif %}
+                <td>{{ loop.index }}</td>
+                <td>
+                    <a href="{{ url_for('main.country',
+                               country_id=c.id) }}">
+                        {{ c.name }}
+                    </a>
+                </td>
+                <td>{{ c.avg_production() }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Back button -->
+    <a href="{{ url_for('main.index') }}">Back to all countries</a>
+
+{% endblock %}

@@ -1,0 +1,112 @@
+<!-- app/templates/index.html -->
+<!-- This is the home page template. -->
+<!-- It extends base.html and fills in the title and content blocks. -->
+
+{% extends 'base.html' %}
+
+{% block title %}Oil Production by Country{% endblock %}
+
+{% block content %}
+
+    <h1>Crude Oil Production by Country</h1>
+    <p>Browse production data from 1992 to 2018 for over 200 countries.</p>
+
+    <!-- Search form - uses GET so the search term appears in the URL -->
+    <!-- This is pure Flask/Jinja2 - no JavaScript needed -->
+    <form action="{{ url_for('main.index') }}" method="GET">
+        <input type="text"
+               name="search"
+               placeholder="Search for a country..."
+               value="{{ search }}">
+        <button type="submit">Search</button>
+
+        <!-- Only show clear button if a search is active -->
+        {% if search %}
+            <a href="{{ url_for('main.index') }}">Clear</a>
+        {% endif %}
+    </form>
+
+    <!-- Summary line showing how many producers vs non-producers -->
+    <p>
+        Showing {{ producers|length }} oil producing countries
+        ({{ non_producers|length }} countries have no recorded production)
+    </p>
+
+    <!-- Oil producers table -->
+    {% if producers %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Flag</th>
+                    <th>Country</th>
+                    <th>Avg Production (thousand barrels/day)</th>
+                    <th>Peak Year</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Loop through each oil producing country -->
+                {% for country in producers %}
+                <tr>
+                    <td>
+                        <!-- Only show flag image if a URL exists -->
+                        {% if country.flag_url %}
+                            <img src="{{ country.flag_url }}"
+                                 alt="{{ country.name }} flag"
+                                 width="40">
+                        {% endif %}
+                    </td>
+                    <td>{{ country.name }}</td>
+                    <td>{{ country.avg_production() }}</td>
+                    <td>
+                        <!-- Show peak year or N/A if no data -->
+                        {% if country.peak_production() %}
+                            {{ country.peak_production().year }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>
+                        <!-- Link to the country detail page -->
+                        <a href="{{ url_for('main.country',
+                                   country_id=country.id) }}">
+                            View
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+    {% else %}
+        <!-- Shown when search returns no producing countries -->
+        <p>No oil producing countries found matching "{{ search }}".</p>
+    {% endif %}
+
+    <!-- Non-producers section -->
+    <!-- Shows as a compact tag cloud rather than a full table -->
+    <!-- since these countries have no meaningful data to display -->
+    <h2>Countries with No Recorded Production</h2>
+    <p>
+        The following countries have no recorded crude oil production
+        in the dataset.
+    </p>
+
+    <div class="non-producers">
+        <!-- Loop through non-producing countries -->
+        {% for country in non_producers %}
+            <!-- Each non-producer links to their detail page -->
+            <a href="{{ url_for('main.country',
+                       country_id=country.id) }}">
+                <!-- Show flag if available -->
+                {% if country.flag_url %}
+                    <img src="{{ country.flag_url }}"
+                         alt="{{ country.name }} flag"
+                         width="24">
+                {% endif %}
+                {{ country.name }}
+            </a>
+        {% endfor %}
+    </div>
+
+{% endblock %}
