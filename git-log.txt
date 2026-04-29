@@ -1,3 +1,5 @@
+* a4884db : Add pytest tests with 10 passing tests for models and routes
+* 2055111 : Add git log file
 * de70fbd : Add project dependencies to requirements.txt
 * d456ac0 : Initial commit - Flask app with models, routes and templates
 * 583655a : Initial commit - Flask app with models, routes and templates
