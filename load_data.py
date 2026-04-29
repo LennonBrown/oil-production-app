@@ -22,11 +22,6 @@ def load_data():
     print("Reading CSV file...")
     df = pd.read_csv('data/oil_production.csv')
 
-    # The CSV has columns: Country, Flag, 1992, 1993, 1994 ... 2018
-    # We need to reshape it from wide format to long format.
-    # Wide:  Country | 1992 | 1993 | 1994
-    # Long:  Country | Year | Production
-
     # Get just the year columns (anything that is a number)
     year_columns = [col for col in df.columns
                     if col.strip().isdigit()]
@@ -34,8 +29,6 @@ def load_data():
     print(f"Found year columns: {year_columns}")
 
     # Melt reshapes wide format into long format
-    # id_vars are the columns we keep as-is
-    # value_vars are the year columns we want to reshape
     df_long = pd.melt(
         df,
         id_vars=['Country', 'Flag'],
@@ -50,7 +43,7 @@ def load_data():
     # Convert year to integer
     df_long['year'] = df_long['year'].astype(int)
 
-    # Replace '--' and any non-numeric values with None
+    # Replace non-numeric values with None
     df_long['production'] = pd.to_numeric(
         df_long['production'], errors='coerce'
     )
@@ -61,8 +54,7 @@ def load_data():
     print(f"Total records after reshaping: {len(df_long)}")
 
     with app.app_context():
-        # Create tables if they don't exist yet
-        # This creates the country and production tables in oil.db
+        # Create tables if they dont exist yet
         db.create_all()
 
         # Clear existing data so we can reload cleanly
@@ -80,11 +72,10 @@ def load_data():
             if pd.isna(name):
                 continue
 
-            # Skip if we have already added this country (avoid duplicates)
+            # Skip duplicates
             if str(name) in countries_added:
                 continue
 
-            # Skip non-country rows at the bottom of the CSV
             # Skip non-country rows at the bottom of the CSV
             if str(name).startswith('Crude Oil') or \
                str(name).startswith('Petroleum') or \
@@ -98,10 +89,10 @@ def load_data():
             country = Country(name=str(name), flag_url=flag)
             db.session.add(country)
 
-            # flush() gets the auto-generated id without fully committing
+            # flush() gets the id without fully committing
             db.session.flush()
 
-            # Store the country id for use when loading productions
+            # Store country id for use when loading productions
             countries_added[str(name)] = country.id
 
         db.session.commit()
@@ -114,7 +105,7 @@ def load_data():
         for _, row in df_long.iterrows():
             name = str(row['name'])
 
-            # Skip if we don't have this country
+            # Skip if we dont have this country
             if name not in countries_added:
                 continue
 
