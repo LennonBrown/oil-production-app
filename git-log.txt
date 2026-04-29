@@ -1,0 +1,3 @@
+* de70fbd : Add project dependencies to requirements.txt
+* d456ac0 : Initial commit - Flask app with models, routes and templates
+* 583655a : Initial commit - Flask app with models, routes and templates
