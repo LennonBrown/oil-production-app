@@ -7,16 +7,15 @@ from app import create_app, db
 # Create the Flask app using the factory function
 app = create_app()
 
+# This runs when Render starts the app via gunicorn
+# It creates the database tables and loads data if empty
+with app.app_context():
+    db.create_all()
+    from app.models import Country
+    if Country.query.count() == 0:
+        print("Database empty - loading data now...")
+        from load_data import load_data
+        load_data()
+
 if __name__ == '__main__':
-    with app.app_context():
-        # Create all tables if they don't exist
-        db.create_all()
-
-        # Load data if the database is empty
-        from app.models import Country
-        if Country.query.count() == 0:
-            print("Database is empty - loading data...")
-            from load_data import load_data
-            load_data()
-
     app.run(debug=True)
