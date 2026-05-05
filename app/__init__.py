@@ -30,7 +30,7 @@ def create_app():
     from app import models
     
     
-     # --- Register Blueprints ---
+    # --- Register Blueprints ---
     # Blueprints are Flask's way of organising routes into separate modules.
     # We import inside the function to avoid circular imports.
 
