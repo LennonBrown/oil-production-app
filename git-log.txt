@@ -1,3 +1,11 @@
+* 8d91aaf : Add Region table, regions list page and region detail page
+* 56ea2a4 : Update colour scheme - black text on orange navbar
+* ebae64f : Fix environment variable loading for Render
+* 50b7265 : Add live WTI oil price page using EIA API
+* 1bfdf03 : Auto load data on startup for Render
+* 6cb6049 : Add build script to load data on Render
+* 920ca26 : Add Procfile and update requirements for Render deployment
+* 7c642a9 : Update git log
 * a4884db : Add pytest tests with 10 passing tests for models and routes
 * 2055111 : Add git log file
 * de70fbd : Add project dependencies to requirements.txt
