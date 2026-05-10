@@ -181,7 +181,10 @@ def analysis():
     ).all()
 
     # Find the peak production year globally
-    peak_year = max(yearly_totals, key=lambda x: x.total)
+    # Handle empty database gracefully for testing
+    peak_year = max(
+        yearly_totals, key=lambda x: x.total
+    ) if yearly_totals else None
 
     # Get all countries for analysis
     all_countries = Country.query.all()

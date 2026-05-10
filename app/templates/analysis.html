@@ -34,12 +34,26 @@
             </tr>
             <tr>
                 <td>Peak global production year</td>
-                <td>{{ peak_year.year }}</td>
+                <td>
+                    <!-- Check peak_year exists before displaying -->
+                    {% if peak_year %}
+                        {{ peak_year.year }}
+                    {% else %}
+                        No data
+                    {% endif %}
+                </td>
             </tr>
             <tr>
                 <td>Peak global production</td>
-                <td>{{ "%.2f"|format(peak_year.total) }}
-                    thousand barrels/day</td>
+                <td>
+                    <!-- Check peak_year exists before displaying -->
+                    {% if peak_year %}
+                        {{ "%.2f"|format(peak_year.total) }}
+                        thousand barrels/day
+                    {% else %}
+                        No data
+                    {% endif %}
+                </td>
             </tr>
         </tbody>
     </table>
@@ -61,7 +75,8 @@
         <tbody>
             {% for row in yearly_totals %}
             <!-- Highlight the peak year in the table -->
-            <tr {% if row.year == peak_year.year %}
+            <!-- Check peak_year exists before comparing -->
+            <tr {% if peak_year and row.year == peak_year.year %}
                 class="peak-row"{% endif %}>
                 <td>{{ row.year }}</td>
                 <td>{{ "%.2f"|format(row.total) }}</td>
@@ -78,6 +93,8 @@
         in global oil production.
     </p>
 
+    <!-- Only show table if we have enough countries -->
+    {% if top_5 and bottom_5 %}
     <table>
         <thead>
             <tr>
@@ -112,6 +129,9 @@
             {% endfor %}
         </tbody>
     </table>
+    {% else %}
+        <p>No data available for comparison.</p>
+    {% endif %}
 
     <a href="{{ url_for('main.index') }}">Back to all countries</a>
 
