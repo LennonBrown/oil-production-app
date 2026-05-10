@@ -1,0 +1,67 @@
+<!-- app/templates/oil_price.html -->
+<!-- Displays the current WTI crude oil price -->
+<!-- fetched live from the Alpha Vantage API -->
+
+{% extends 'base.html' %}
+
+{% block title %}Live Oil Price - OilTracker{% endblock %}
+
+{% block content %}
+
+    <h1>Live WTI Crude Oil Price</h1>
+    <p>
+        West Texas Intermediate (WTI) is the main oil benchmark
+        for North America and is used as a reference price
+        for oil globally.
+    </p>
+
+    {% if error %}
+        <!-- Show error message if API call failed -->
+        <div class="error-box">
+            <p>{{ error }}</p>
+        </div>
+
+    {% elif price_data %}
+        <!-- Show the current oil price -->
+        <div class="price-card">
+            <h2>Current Price</h2>
+            <div class="price-display">
+                ${{ price_data.price }}
+            </div>
+            <p class="price-unit">{{ price_data.unit }}</p>
+            <p class="price-date">As of {{ price_data.date }}</p>
+        </div>
+
+        <h2>What does this mean?</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Price Range</th>
+                    <th>Market Condition</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Below $40</td>
+                    <td>Low price environment - pressure on producers</td>
+                </tr>
+                <tr>
+                    <td>$40 - $70</td>
+                    <td>Moderate price - balanced market</td>
+                </tr>
+                <tr>
+                    <td>$70 - $100</td>
+                    <td>High price - favourable for producers</td>
+                </tr>
+                <tr>
+                    <td>Above $100</td>
+                    <td>Very high price - supply concerns</td>
+                </tr>
+            </tbody>
+        </table>
+
+    {% endif %}
+
+    <a href="{{ url_for('main.index') }}">Back to all countries</a>
+
+{% endblock %}

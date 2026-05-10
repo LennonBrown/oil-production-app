@@ -96,3 +96,62 @@ def compare():
 
     return render_template('compare.html',
                            top_countries=top_countries)
+
+
+@main.route('/oil-price')
+def oil_price():
+    """
+    Oil price page - fetches current WTI crude oil price
+    from the EIA (U.S. Energy Information Administration) API.
+    This is the same organisation that produced our dataset.
+    """
+    import requests
+    import os
+
+    # Get the EIA API key from environment variables
+    api_key = os.environ.get('EIA_API_KEY')
+
+    # EIA API endpoint for WTI crude oil weekly spot price
+    url = (
+        f'https://api.eia.gov/v2/petroleum/pri/spt/data/'
+        f'?api_key={api_key}'
+        f'&frequency=weekly'
+        f'&data[0]=value'
+        f'&facets[product][]=EPCWTI'
+        f'&sort[0][column]=period'
+        f'&sort[0][direction]=desc'
+        f'&length=1'
+    )
+
+    price_data = None
+    error = None
+
+    try:
+        # Make the API request with a timeout of 10 seconds
+        response = requests.get(url, timeout=10)
+        data = response.json()
+
+        # Check if we got valid data back
+        if ('response' in data and
+                'data' in data['response'] and
+                len(data['response']['data']) > 0):
+
+            # Get the most recent price entry
+            latest = data['response']['data'][0]
+            price_data = {
+                'price': round(float(latest['value']), 2),
+                'date': latest['period'],
+                'unit': 'USD per barrel'
+            }
+        else:
+            error = 'Price data currently unavailable.'
+
+    except Exception as e:
+        # Handle any network or parsing errors gracefully
+        print("EIA API ERROR:", e)
+        error = 'Could not fetch oil price at this time.'
+
+    return render_template('oil_price.html',
+                           price_data=price_data,
+                           error=error)
+

@@ -1,4 +1,6 @@
 #This is the application factory file
+from dotenv import load_dotenv
+load_dotenv()
 
 from flask import Flask                   #Import Flask 
 from flask_sqlalchemy import SQLAlchemy   #SQLAlchemy is a Python library used to work with databases without writing raw SQL for everything.
