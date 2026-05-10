@@ -1,0 +1,118 @@
+<!-- app/templates/analysis.html -->
+<!-- Global oil production analysis page -->
+<!-- Shows trends, statistics and comparisons across all countries -->
+
+{% extends 'base.html' %}
+
+{% block title %}Global Oil Analysis - OilTracker{% endblock %}
+
+{% block content %}
+
+    <h1>Global Oil Production Analysis</h1>
+    <p>
+        An in-depth analysis of crude oil production trends
+        across all 220 countries from 1992 to 2018.
+    </p>
+
+    <!-- Key statistics summary -->
+    <h2>Key Statistics</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Statistic</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Total oil producing countries</td>
+                <td>{{ total_producers }}</td>
+            </tr>
+            <tr>
+                <td>Countries with no recorded production</td>
+                <td>{{ total_non_producers }}</td>
+            </tr>
+            <tr>
+                <td>Peak global production year</td>
+                <td>{{ peak_year.year }}</td>
+            </tr>
+            <tr>
+                <td>Peak global production</td>
+                <td>{{ "%.2f"|format(peak_year.total) }}
+                    thousand barrels/day</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- World production by year -->
+    <h2>World Production by Year</h2>
+    <p>
+        Total crude oil production across all countries
+        combined, measured in thousand barrels per day.
+    </p>
+    <table>
+        <thead>
+            <tr>
+                <th>Year</th>
+                <th>Total World Production
+                    (thousand barrels/day)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in yearly_totals %}
+            <!-- Highlight the peak year in the table -->
+            <tr {% if row.year == peak_year.year %}
+                class="peak-row"{% endif %}>
+                <td>{{ row.year }}</td>
+                <td>{{ "%.2f"|format(row.total) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Top 5 vs Bottom 5 comparison -->
+    <h2>Top 5 vs Bottom 5 Producers</h2>
+    <p>
+        Comparing the highest and lowest average producing
+        countries gives context to the scale of inequality
+        in global oil production.
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Top 5 Producers</th>
+                <th>Avg Production</th>
+                <th>Rank</th>
+                <th>Bottom 5 Producers</th>
+                <th>Avg Production</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for i in range(5) %}
+            <tr>
+                <td>{{ i + 1 }}</td>
+                <td>
+                    <a href="{{ url_for('main.country',
+                               country_id=top_5[i].id) }}">
+                        {{ top_5[i].name }}
+                    </a>
+                </td>
+                <td>{{ top_5[i].avg_production() }}</td>
+                <td>{{ i + 1 }}</td>
+                <td>
+                    <a href="{{ url_for('main.country',
+                               country_id=bottom_5[i].id) }}">
+                        {{ bottom_5[i].name }}
+                    </a>
+                </td>
+                <td>{{ bottom_5[i].avg_production() }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ url_for('main.index') }}">Back to all countries</a>
+
+{% endblock %}

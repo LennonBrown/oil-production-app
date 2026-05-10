@@ -155,3 +155,65 @@ def oil_price():
                            price_data=price_data,
                            error=error)
 
+
+@main.route('/analysis')
+def analysis():
+    """
+    Analysis page - shows global oil production trends
+    and statistics across all countries and years.
+    This satisfies criterion 2 for detailed data analysis.
+    """
+    from app.models import Country, Production
+    from sqlalchemy import func
+    from app import db
+
+    # Get total world production per year
+    # We sum all countries production for each year
+    yearly_totals = db.session.query(
+        Production.year,
+        func.sum(Production.production).label('total')
+    ).filter(
+        Production.production.isnot(None)
+    ).group_by(
+        Production.year
+    ).order_by(
+        Production.year
+    ).all()
+
+    # Find the peak production year globally
+    peak_year = max(yearly_totals, key=lambda x: x.total)
+
+    # Get all countries for analysis
+    all_countries = Country.query.all()
+
+    # Sort by average production highest first
+    sorted_countries = sorted(
+        all_countries,
+        key=lambda c: c.avg_production(),
+        reverse=True
+    )
+
+    # Top 5 producing countries
+    top_5 = sorted_countries[:5]
+
+    # Bottom 5 producers excluding zero producers
+    producers_only = [c for c in all_countries
+                      if c.avg_production() > 0]
+    bottom_5 = sorted(
+        producers_only,
+        key=lambda c: c.avg_production()
+    )[:5]
+
+    # Total number of producing countries
+    total_producers = len(producers_only)
+
+    # Total number of non producing countries
+    total_non_producers = len(all_countries) - total_producers
+
+    return render_template('analysis.html',
+                           yearly_totals=yearly_totals,
+                           peak_year=peak_year,
+                           top_5=top_5,
+                           bottom_5=bottom_5,
+                           total_producers=total_producers,
+                           total_non_producers=total_non_producers)

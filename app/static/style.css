@@ -59,7 +59,7 @@ body {
 
 /* --- Navigation --- */
 nav {
-    background-color: #2e1a0a;
+    background-color: #d4520a;
     padding: 1rem 2rem;
     display: flex;
     gap: 2rem;
@@ -68,7 +68,7 @@ nav {
 
 /* Site name/logo on the left pushes links to the right */
 nav .site-name {
-    color: #ffffff;
+    color: #000000;
     font-size: 1.2rem;
     font-weight: bold;
     margin-right: auto;
@@ -77,13 +77,13 @@ nav .site-name {
 }
 
 nav a {
-    color: #e0e0e0;
+    color: #000000;
     text-decoration: none;
     font-size: 1rem;
 }
 
 nav a:hover {
-    color: #ffffff;
+    color: #333333;
     text-decoration: underline;
 }
 
@@ -97,13 +97,13 @@ main {
 h1 {
     font-size: 2rem;
     margin-bottom: 0.5rem;
-    color: #1a1a2e;
+    color: #333;
 }
 
 h2 {
     font-size: 1.4rem;
     margin: 1.5rem 0 0.75rem;
-    color: #1a1a2e;
+    color: #333;
 }
 
 p {
@@ -125,11 +125,12 @@ form input[type="text"] {
     border: 1px solid #ccc;
     border-radius: 4px;
     width: 300px;
+    color: #333;
 }
 
 form button {
     padding: 0.5rem 1rem;
-    background-color: #2e1a0a;
+    background-color: #d4520a;
     color: white;
     border: none;
     border-radius: 4px;
@@ -138,12 +139,12 @@ form button {
 }
 
 form button:hover {
-    background-color: #1a1a2e;
+    background-color: #b34508;
 }
 
 form a {
     padding: 0.5rem 1rem;
-    color: #1a1a2e;
+    color: #333;
     text-decoration: underline;
     font-size: 0.9rem;
 }
@@ -159,7 +160,7 @@ table {
 }
 
 thead {
-    background-color: #2e1a0a;
+    background-color: #d4520a;
     color: white;
 }
 
@@ -167,19 +168,21 @@ th, td {
     padding: 0.75rem 1rem;
     text-align: left;
     border-bottom: 1px solid #ddd;
+    color: #333;
 }
 
 tbody tr:hover {
-    background-color: #f0f0f0;
+    background-color: #fff3e0;
 }
 
 /* --- Links --- */
 a {
-    color: #1a1a2e;
+    color: #333;
     text-decoration: none;
 }
 
 a:hover {
+    color: #d4520a;
     text-decoration: underline;
 }
 
@@ -188,8 +191,8 @@ footer {
     text-align: center;
     padding: 1.5rem;
     margin-top: 3rem;
-    background-color: #2e1a0a;
-    color: #e0e0e0;
+    background-color: #d4520a;
+    color: #ffffff;
     font-size: 0.85rem;
 }
 
@@ -215,6 +218,7 @@ footer {
 }
 
 /* Each non-producer is a small clickable pill/badge */
+/* colour set to black to override the global link colour */
 .non-producers a {
     background-color: white;
     border: 1px solid #ddd;
@@ -224,12 +228,14 @@ footer {
     display: flex;
     align-items: center;
     gap: 0.4rem;
+    color: #333;
 }
 
 /* Highlight on hover */
 .non-producers a:hover {
-    background-color: #f0f0f0;
+    background-color: #fff3e0;
     text-decoration: none;
+    color: #333;
 }
 
 /* --- Oil Price Page --- */
@@ -240,14 +246,14 @@ footer {
     padding: 2rem;
     margin: 1.5rem 0;
     text-align: center;
-    border: 2px solid #2e1a0a;
+    border: 2px solid #d4520a;
 }
 
 /* Large price number display */
 .price-display {
     font-size: 4rem;
     font-weight: bold;
-    color: #2e1a0a;
+    color: #d4520a;
     margin: 1rem 0;
 }
 
@@ -269,4 +275,11 @@ footer {
     padding: 1rem;
     margin: 1rem 0;
     color: #c0392b;
+}
+
+/* --- Analysis Page --- */
+/* Highlights the peak production year in the table */
+.peak-row {
+    background-color: #fff8e1;
+    font-weight: bold;
 }
