@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Regions{% endblock %}
+{% block nav_regions %}active{% endblock %}
+
+{% block content %}
+
+<section class="page-hero">
+    <div class="page-hero-inner">
+        <p class="page-breadcrumb"><a href="{{ url_for('main.index') }}">Home</a> &rsaquo; Regions</p>
+        <h1 class="page-title">World Regions</h1>
+        <p class="page-subtitle">Oil production grouped by world region — click any card to explore the countries within it.</p>
+    </div>
+</section>
+
+<div class="page-content">
+
+    <!-- Regional production bar chart -->
+    <div class="chart-wrap">
+        <p class="chart-title">Total Average Production by Region (thousand barrels/day)</p>
+        <canvas id="regionsBarChart" height="80"></canvas>
+    </div>
+
+    <!-- Region cards grid -->
+    <div class="regions-grid">
+        {% for region in regions %}
+        <a href="{{ url_for('main.region', region_id=region.id) }}" class="region-card">
+            <div class="region-card-top">
+                <span class="region-card-name">{{ region.name }}</span>
+                <span class="region-card-arrow">&#8594;</span>
+            </div>
+            <div class="region-card-stat">
+                <span class="region-stat-num">{{ "{:,.0f}".format(region.total_avg_production()) }}</span>
+                <span class="region-stat-label">kb/d avg output</span>
+            </div>
+            <div class="region-card-meta">
+                <span>{{ region.country_count() }} countries</span>
+                <span class="region-meta-divider">&#183;</span>
+                <span>{{ region.producing_countries()|length }} producers</span>
+            </div>
+            <!-- Production bar indicator -->
+            {% set max_prod = regions[0].total_avg_production() %}
+            {% if max_prod > 0 %}
+            <div class="region-bar-bg">
+                <div class="region-bar-fill" style="width: {{ ((region.total_avg_production() / max_prod) * 100)|round|int }}%"></div>
+            </div>
+            {% endif %}
+        </a>
+        {% endfor %}
+    </div>
+
+    <a href="{{ url_for('main.index') }}" class="back-link">&#8592; Back to all countries</a>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    Chart.defaults.color = '#888880';
+    Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+    Chart.defaults.font.family = "'DM Sans', sans-serif";
+
+    var regionNames  = [{% for r in regions %}"{{ r.name }}"{% if not loop.last %},{% endif %}{% endfor %}];
+    var regionTotals = [{% for r in regions %}{{ r.total_avg_production()|round(2) }}{% if not loop.last %},{% endif %}{% endfor %}];
+
+    new Chart(document.getElementById('regionsBarChart'), {
+        type: 'bar',
+        data: {
+            labels: regionNames,
+            datasets: [{
+                label: 'Avg Production (kb/d)',
+                data: regionTotals,
+                backgroundColor: 'rgba(232, 89, 12, 0.75)',
+                borderColor: '#e8590c',
+                borderWidth: 1,
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#1a1a1a',
+                    borderColor: 'rgba(232,89,12,0.4)',
+                    borderWidth: 1,
+                    titleColor: '#f0ede8',
+                    bodyColor: '#888880',
+                    callbacks: {
+                        label: function(ctx) {
+                            return ' ' + Number(ctx.raw).toLocaleString() + ' kb/d';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { grid: { display: false }, ticks: { color: '#888880' } },
+                y: {
+                    grid: { color: 'rgba(255,255,255,0.04)' },
+                    ticks: {
+                        color: '#555550',
+                        callback: function(val) { return Number(val).toLocaleString(); }
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

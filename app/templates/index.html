@@ -1,114 +1,231 @@
 <!-- app/templates/index.html -->
-<!-- This is the home page template. -->
-<!-- It extends base.html and fills in the title and content blocks. -->
+<!-- Home page: hero section, animated stats, about-oil info, and country search/filter table. -->
+<!-- Extends base.html and sets the nav_home active class. -->
 
 {% extends 'base.html' %}
 
-{% block title %}Oil Production by Country{% endblock %}
+{% block title %}Home{% endblock %}
+{% block nav_home %}active{% endblock %}
 
 {% block content %}
 
-    <h1>Crude Oil Production by Country</h1>
-    <p>Browse crude oil production data from 1992 to 2018 for over 200 
-countries. Click any country to see detailed yearly figures and 
-how it compares to the world's top producers.</p>
-
-    <!-- Search form - uses GET so the search term appears in the URL -->
-    <!-- This is pure Flask/Jinja2 - no JavaScript needed -->
-    <form action="{{ url_for('main.index') }}" method="GET">
-        <input type="text"
-               name="search"
-               placeholder="Search for a country..."
-               value="{{ search }}">
-        <button type="submit">Search</button>
-
-        <!-- Only show clear button if a search is active -->
-        {% if search %}
-            <a href="{{ url_for('main.index') }}">Clear</a>
-        {% endif %}
-    </form>
-
-    <!-- Summary line showing how many producers vs non-producers -->
-    <p>
-        Showing {{ producers|length }} oil producing countries
-        ({{ non_producers|length }} countries have no recorded production)
-    </p>
-
-    <!-- Oil producers table -->
-    {% if producers %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Flag</th>
-                    <th>Country</th>
-                    <th>Avg Production (thousand barrels/day)</th>
-                    <th>Peak Year</th>
-                    <th>Details</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Loop through each oil producing country -->
-                {% for country in producers %}
-                <tr>
-                    <td>
-                        <!-- Only show flag image if a URL exists -->
-                        {% if country.flag_url %}
-                            <img src="{{ country.flag_url }}"
-                                 alt="{{ country.name }} flag"
-                                 width="40">
-                        {% endif %}
-                    </td>
-                    <td>{{ country.name }}</td>
-                    <td>{{ country.avg_production() }}</td>
-                    <td>
-                        <!-- Show peak year or N/A if no data -->
-                        {% if country.peak_production() %}
-                            {{ country.peak_production().year }}
-                        {% else %}
-                            N/A
-                        {% endif %}
-                    </td>
-                    <td>
-                        <!-- Link to the country detail page -->
-                        <a href="{{ url_for('main.country',
-                                   country_id=country.id) }}">
-                            View
-                        </a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-    {% else %}
-        <!-- Shown when search returns no producing countries -->
-        <p>No oil producing countries found matching "{{ search }}".</p>
-    {% endif %}
-
-    <!-- Non-producers section -->
-    <!-- Shows as a compact tag cloud rather than a full table -->
-    <!-- since these countries have no meaningful data to display -->
-    <h2>Countries with No Recorded Production</h2>
-    <p>
-        The following countries have no recorded crude oil production
-        in the dataset.
-    </p>
-
-    <div class="non-producers">
-        <!-- Loop through non-producing countries -->
-        {% for country in non_producers %}
-            <!-- Each non-producer links to their detail page -->
-            <a href="{{ url_for('main.country',
-                       country_id=country.id) }}">
-                <!-- Show flag if available -->
-                {% if country.flag_url %}
-                    <img src="{{ country.flag_url }}"
-                         alt="{{ country.name }} flag"
-                         width="24">
-                {% endif %}
-                {{ country.name }}
-            </a>
-        {% endfor %}
+<!-- ===== HERO SECTION ===== -->
+<section class="hero">
+    <div class="hero-bg-grid"></div>
+    <div class="hero-content">
+        <p class="hero-eyebrow">&#9679; Real-time global data</p>
+        <h1 class="hero-title">Track Every<br><span class="hero-accent">Drop</span> of Oil.</h1>
+        <p class="hero-subtitle">
+            27 years of production data across 220 countries and 7 world regions.
+            Understand the fuel that drives the global economy.
+        </p>
+        <div class="hero-cta-row">
+            <a href="#countries" class="btn-primary">Explore Countries</a>
+            <a href="{{ url_for('main.analysis') }}" class="btn-secondary">View Analysis</a>
+        </div>
     </div>
 
+    <div class="hero-stats">
+        <div class="hstat">
+            <span class="hstat-num" data-target="220">0</span>
+            <span class="hstat-label">Countries Tracked</span>
+        </div>
+        <div class="hstat-divider"></div>
+        <div class="hstat">
+            <span class="hstat-num" data-target="27">0</span>
+            <span class="hstat-label">Years of Data</span>
+        </div>
+        <div class="hstat-divider"></div>
+        <div class="hstat">
+            <span class="hstat-num" data-target="5940">0</span>
+            <span class="hstat-label">Production Records</span>
+        </div>
+        <div class="hstat-divider"></div>
+        <div class="hstat">
+            <span class="hstat-num" data-target="7">0</span>
+            <span class="hstat-label">World Regions</span>
+        </div>
+    </div>
+</section>
+
+<!-- ===== WHY OIL MATTERS ===== -->
+<section class="info-section">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Why Track Oil Production?</h2>
+            <p class="section-sub">Oil is the world's most traded commodity. Its production levels ripple across every economy on Earth.</p>
+        </div>
+
+        <div class="info-cards">
+
+            <div class="info-card">
+                <div class="info-card-icon">&#128200;</div>
+                <h3>Economic Indicator</h3>
+                <p>
+                    Oil production directly sets energy prices worldwide. When major producers
+                    like Saudi Arabia or Russia increase output, prices fall globally — affecting
+                    transport, manufacturing, and household bills in every country.
+                </p>
+            </div>
+
+            <div class="info-card">
+                <div class="info-card-icon">&#127775;</div>
+                <h3>OPEC &amp; Geopolitics</h3>
+                <p>
+                    The Organisation of Petroleum Exporting Countries (OPEC) controls roughly
+                    40% of global supply. Their production decisions &mdash; made in Vienna &mdash;
+                    can trigger recessions or fuel economic booms thousands of miles away.
+                </p>
+            </div>
+
+            <div class="info-card">
+                <div class="info-card-icon">&#9971;</div>
+                <h3>WTI &amp; Brent Crude</h3>
+                <p>
+                    West Texas Intermediate (WTI) and Brent Crude are the two benchmark prices
+                    that set the global oil market. Airlines, logistics firms, and governments
+                    watch these figures daily to plan budgets and hedge risk.
+                </p>
+            </div>
+
+            <div class="info-card">
+                <div class="info-card-icon">&#127757;</div>
+                <h3>The Energy Transition</h3>
+                <p>
+                    As renewables grow, understanding which nations remain dependent on oil
+                    exports is critical. Tracking production trends reveals which economies
+                    face the biggest challenges in the shift to clean energy.
+                </p>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ===== QUICK REGIONAL SNAPSHOT ===== -->
+<section class="snapshot-section">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Regional Overview</h2>
+            <p class="section-sub">Production is heavily concentrated. The Middle East alone accounts for the majority of global output.</p>
+        </div>
+        <div class="snapshot-grid">
+            <div class="snapshot-card">
+                <span class="snap-region">Middle East</span>
+                <span class="snap-desc">World's largest producing region — home to Saudi Arabia, Iraq, and Iran.</span>
+                <a href="{{ url_for('main.regions') }}" class="snap-link">View region &#8594;</a>
+            </div>
+            <div class="snapshot-card">
+                <span class="snap-region">North America</span>
+                <span class="snap-desc">The US shale revolution made North America a top global producer from 2010.</span>
+                <a href="{{ url_for('main.regions') }}" class="snap-link">View region &#8594;</a>
+            </div>
+            <div class="snapshot-card">
+                <span class="snap-region">Eurasia</span>
+                <span class="snap-desc">Russia and Kazakhstan hold some of the world's largest proven reserves.</span>
+                <a href="{{ url_for('main.regions') }}" class="snap-link">View region &#8594;</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== COUNTRY TABLE ===== -->
+<section class="countries-section" id="countries">
+    <div class="container">
+
+        <div class="section-header">
+            <h2 class="section-title">All Countries</h2>
+            <p class="section-sub">Browse, search, and filter oil-producing nations.</p>
+        </div>
+
+        <!-- Search + filter bar -->
+        <form method="GET" action="{{ url_for('main.index') }}" class="filter-bar">
+            <div class="search-wrap">
+                <span class="search-icon">&#128269;</span>
+                <input
+                    type="text"
+                    name="search"
+                    placeholder="Search country..."
+                    value="{{ search }}"
+                    class="search-input"
+                    autocomplete="off"
+                >
+            </div>
+
+            <select name="filter" class="filter-select">
+                <option value="all"           {% if filter == 'all'           %}selected{% endif %}>All countries</option>
+                <option value="producers"     {% if filter == 'producers'     %}selected{% endif %}>Producers only</option>
+                <option value="non_producers" {% if filter == 'non_producers' %}selected{% endif %}>Non-producers</option>
+            </select>
+
+            <button type="submit" class="btn-primary small">Search</button>
+
+            {% if search or (filter and filter != 'all') %}
+            <a href="{{ url_for('main.index') }}" class="btn-ghost small">Clear</a>
+            {% endif %}
+        </form>
+
+        <!-- Results count -->
+        <p class="results-count">
+            Showing <strong>{{ countries | length }}</strong> countr{{ 'y' if countries | length == 1 else 'ies' }}
+            {% if search %} matching &ldquo;{{ search }}&rdquo;{% endif %}
+        </p>
+
+        <!-- Country cards grid -->
+        <div class="country-grid">
+            {% for country in countries %}
+            <a href="{{ url_for('main.country', country_id=country.id) }}" class="country-card">
+
+                <div class="card-flag">
+                    {% if country.flag_url %}
+                        <img src="{{ country.flag_url }}" alt="{{ country.name }} flag" loading="lazy">
+                    {% else %}
+                        <span class="flag-placeholder">&#127988;</span>
+                    {% endif %}
+                </div>
+
+                <div class="card-info">
+                    <span class="card-name">{{ country.name }}</span>
+                    {% if country.avg_production() and country.avg_production() > 0 %}
+                        <span class="card-production">
+                            {{ "{:,.0f}".format(country.avg_production()) }} kb/d avg
+                        </span>
+                        <span class="card-badge producer">Producer</span>
+                    {% else %}
+                        <span class="card-production muted">No production data</span>
+                        <span class="card-badge non-producer">Non-producer</span>
+                    {% endif %}
+                </div>
+
+                <span class="card-arrow">&#8594;</span>
+            </a>
+            {% else %}
+            <p class="empty-state">No countries found. <a href="{{ url_for('main.index') }}">Clear filters</a></p>
+            {% endfor %}
+        </div>
+
+    </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    /* === Animated stat counters in the hero === */
+    document.querySelectorAll('.hstat-num').forEach(function (el) {
+        var target = parseInt(el.getAttribute('data-target'), 10);
+        var duration = 1800;
+        var start = null;
+
+        function step(timestamp) {
+            if (!start) start = timestamp;
+            var progress = Math.min((timestamp - start) / duration, 1);
+            var eased = 1 - Math.pow(1 - progress, 3);
+            el.textContent = Math.floor(eased * target).toLocaleString();
+            if (progress < 1) requestAnimationFrame(step);
+        }
+
+        setTimeout(function () { requestAnimationFrame(step); }, 400);
+    });
+</script>
 {% endblock %}

@@ -14,16 +14,16 @@ main = Blueprint('main', __name__)
 def index():
     """
     Home page — shows a list of all countries.
-    Splits countries into producers and non-producers.
-    Supports basic search by country name.
+    Supports search by name and filter by producer status.
     """
     from app.models import Country
 
-    # Get the search query from the URL e.g. /?search=Saudi
+    # Get search and filter from the URL e.g. /?search=Saudi&filter=producers
     search = request.args.get('search', '')
+    filter = request.args.get('filter', 'all')
 
+    # Base query — filter by name if search term provided
     if search:
-        # Filter countries where the name contains the search term
         # ilike means case-insensitive search
         countries = Country.query.filter(
             Country.name.ilike(f'%{search}%')
@@ -32,17 +32,16 @@ def index():
         # No search — return all countries alphabetically
         countries = Country.query.order_by(Country.name).all()
 
-    # Split into two lists in Python
-    # Producers are countries with an average production above 0
-    producers = [c for c in countries if c.avg_production() > 0]
-
-    # Non-producers are countries with no recorded oil production
-    non_producers = [c for c in countries if c.avg_production() == 0]
+    # Apply producer/non-producer filter on top of search results
+    if filter == 'producers':
+        countries = [c for c in countries if c.avg_production() > 0]
+    elif filter == 'non_producers':
+        countries = [c for c in countries if c.avg_production() == 0]
 
     return render_template('index.html',
-                           producers=producers,
-                           non_producers=non_producers,
-                           search=search)
+                           countries=countries,
+                           search=search,
+                           filter=filter)
 
 
 @main.route('/country/<int:country_id>')

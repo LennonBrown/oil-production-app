@@ -1,138 +1,296 @@
-<!-- app/templates/analysis.html -->
-<!-- Global oil production analysis page -->
-<!-- Shows trends, statistics and comparisons across all countries -->
-
 {% extends 'base.html' %}
 
-{% block title %}Global Oil Analysis - OilTracker{% endblock %}
+{% block title %}Analysis{% endblock %}
+{% block nav_analysis %}active{% endblock %}
 
 {% block content %}
 
-    <h1>Global Oil Production Analysis</h1>
-    <p>
-        An in-depth analysis of crude oil production trends
-        across all 220 countries from 1992 to 2018.
-    </p>
+<!-- ===== PAGE HERO ===== -->
+<section class="page-hero">
+    <div class="page-hero-inner">
+        <p class="page-breadcrumb"><a href="{{ url_for('main.index') }}">Home</a> &rsaquo; Analysis</p>
+        <h1 class="page-title">Global Analysis</h1>
+        <p class="page-subtitle">World crude oil production trends from 1992 to 2018 across 220 countries.</p>
 
-    <!-- Key statistics summary -->
-    <h2>Key Statistics</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Statistic</th>
-                <th>Value</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Total oil producing countries</td>
-                <td>{{ total_producers }}</td>
-            </tr>
-            <tr>
-                <td>Countries with no recorded production</td>
-                <td>{{ total_non_producers }}</td>
-            </tr>
-            <tr>
-                <td>Peak global production year</td>
-                <td>
-                    <!-- Check peak_year exists before displaying -->
-                    {% if peak_year %}
-                        {{ peak_year.year }}
-                    {% else %}
-                        No data
-                    {% endif %}
-                </td>
-            </tr>
-            <tr>
-                <td>Peak global production</td>
-                <td>
-                    <!-- Check peak_year exists before displaying -->
-                    {% if peak_year %}
-                        {{ "%.2f"|format(peak_year.total) }}
-                        thousand barrels/day
-                    {% else %}
-                        No data
-                    {% endif %}
-                </td>
-            </tr>
-        </tbody>
-    </table>
+        <!-- Key stat strip -->
+        <div class="stat-strip">
+            <div class="stat-block">
+                <span class="stat-label">Oil Producing Countries</span>
+                <span class="stat-value">{{ total_producers }}</span>
+            </div>
+            <div class="stat-block">
+                <span class="stat-label">Non-Producing Countries</span>
+                <span class="stat-value neutral">{{ total_non_producers }}</span>
+            </div>
+            <div class="stat-block">
+                <span class="stat-label">Peak Production Year</span>
+                <span class="stat-value">{% if peak_year %}{{ peak_year.year }}{% else %}N/A{% endif %}</span>
+            </div>
+            <div class="stat-block">
+                <span class="stat-label">Peak Output (kb/d)</span>
+                <span class="stat-value">{% if peak_year %}{{ "{:,.0f}".format(peak_year.total) }}{% else %}N/A{% endif %}</span>
+            </div>
+        </div>
+    </div>
+</section>
 
-    <!-- World production by year -->
-    <h2>World Production by Year</h2>
-    <p>
-        Total crude oil production across all countries
-        combined, measured in thousand barrels per day.
-    </p>
-    <table>
-        <thead>
-            <tr>
-                <th>Year</th>
-                <th>Total World Production
-                    (thousand barrels/day)</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for row in yearly_totals %}
-            <!-- Highlight the peak year in the table -->
-            <!-- Check peak_year exists before comparing -->
-            <tr {% if peak_year and row.year == peak_year.year %}
-                class="peak-row"{% endif %}>
-                <td>{{ row.year }}</td>
-                <td>{{ "%.2f"|format(row.total) }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<!-- ===== CHARTS + TABLES ===== -->
+<div class="page-content">
 
-    <!-- Top 5 vs Bottom 5 comparison -->
-    <h2>Top 5 vs Bottom 5 Producers</h2>
-    <p>
-        Comparing the highest and lowest average producing
-        countries gives context to the scale of inequality
-        in global oil production.
-    </p>
+    <!-- CHART 1: World production over time (line chart) -->
+    <div class="chart-wrap">
+        <p class="chart-title">World Total Production by Year (thousand barrels/day)</p>
+        <canvas id="worldLineChart" height="100"></canvas>
+    </div>
 
-    <!-- Only show table if we have enough countries -->
+    <!-- CHART 2: Top 10 producers bar chart -->
+    <div class="chart-wrap">
+        <p class="chart-title">Top 10 Producers — Average Output (thousand barrels/day)</p>
+        <canvas id="topBarChart" height="80"></canvas>
+    </div>
+
+    <!-- Top 5 vs Bottom 5 table + CHART 3 -->
     {% if top_5 and bottom_5 %}
-    <table>
-        <thead>
-            <tr>
-                <th>Rank</th>
-                <th>Top 5 Producers</th>
-                <th>Avg Production</th>
-                <th>Rank</th>
-                <th>Bottom 5 Producers</th>
-                <th>Avg Production</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for i in range(5) %}
-            <tr>
-                <td>{{ i + 1 }}</td>
-                <td>
-                    <a href="{{ url_for('main.country',
-                               country_id=top_5[i].id) }}">
-                        {{ top_5[i].name }}
-                    </a>
-                </td>
-                <td>{{ top_5[i].avg_production() }}</td>
-                <td>{{ i + 1 }}</td>
-                <td>
-                    <a href="{{ url_for('main.country',
-                               country_id=bottom_5[i].id) }}">
-                        {{ bottom_5[i].name }}
-                    </a>
-                </td>
-                <td>{{ bottom_5[i].avg_production() }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-        <p>No data available for comparison.</p>
+    <div class="chart-wrap">
+        <p class="chart-title">Top 5 vs Bottom 5 Producers — Average Output Compared</p>
+        <canvas id="compareBarChart" height="80"></canvas>
+    </div>
+
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Top 5 Producers</th>
+                    <th>Avg Output (kb/d)</th>
+                    <th>Rank</th>
+                    <th>Bottom 5 Producers</th>
+                    <th>Avg Output (kb/d)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in range(5) %}
+                <tr>
+                    <td class="muted">{{ i + 1 }}</td>
+                    <td><a href="{{ url_for('main.country', country_id=top_5[i].id) }}">{{ top_5[i].name }}</a></td>
+                    <td>{{ "{:,.0f}".format(top_5[i].avg_production()) }}</td>
+                    <td class="muted">{{ i + 1 }}</td>
+                    <td><a href="{{ url_for('main.country', country_id=bottom_5[i].id) }}">{{ bottom_5[i].name }}</a></td>
+                    <td>{{ "{:,.0f}".format(bottom_5[i].avg_production()) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     {% endif %}
 
-    <a href="{{ url_for('main.index') }}">Back to all countries</a>
+    <!-- Full yearly totals table -->
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Year</th>
+                    <th>Total World Production (thousand barrels/day)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in yearly_totals %}
+                <tr {% if peak_year and row.year == peak_year.year %}style="background: rgba(232,89,12,0.08);"{% endif %}>
+                    <td>
+                        {{ row.year }}
+                        {% if peak_year and row.year == peak_year.year %}
+                        <span class="card-badge producer" style="margin-left:8px;">Peak</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ "{:,.0f}".format(row.total) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
+    <a href="{{ url_for('main.index') }}" class="back-link">&#8592; Back to all countries</a>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    /* ===== Shared chart defaults ===== */
+    Chart.defaults.color = '#888880';
+    Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+    Chart.defaults.font.family = "'DM Sans', sans-serif";
+
+    /* ===== Data from Flask via Jinja ===== */
+    var years = [{% for row in yearly_totals %}{{ row.year }}{% if not loop.last %},{% endif %}{% endfor %}];
+    var totals = [{% for row in yearly_totals %}{{ "%.2f"|format(row.total) }}{% if not loop.last %},{% endif %}{% endfor %}];
+
+    var top10Names = [{% for c in top_5 %}"{{ c.name }}"{% if not loop.last %},{% endif %}{% endfor %}];
+    var top10Vals  = [{% for c in top_5 %}{{ "%.2f"|format(c.avg_production()) }}{% if not loop.last %},{% endif %}{% endfor %}];
+
+    {% if top_5 and bottom_5 %}
+    var compareNames = [{% for c in top_5 %}"{{ c.name }}"{% if not loop.last %},{% endif %}{% endfor %},
+                        {% for c in bottom_5 %}"{{ c.name }}"{% if not loop.last %},{% endif %}{% endfor %}];
+    var compareVals  = [{% for c in top_5 %}{{ "%.2f"|format(c.avg_production()) }}{% if not loop.last %},{% endif %}{% endfor %},
+                        {% for c in bottom_5 %}{{ "%.2f"|format(c.avg_production()) }}{% if not loop.last %},{% endif %}{% endfor %}];
+    var compareColors = [
+        {% for c in top_5 %}'rgba(232, 89, 12, 0.85)'{% if not loop.last %},{% endif %}{% endfor %},
+        {% for c in bottom_5 %}'rgba(255,255,255,0.15)'{% if not loop.last %},{% endif %}{% endfor %}
+    ];
+    {% endif %}
+
+    /* ===== CHART 1: World production line chart ===== */
+    new Chart(document.getElementById('worldLineChart'), {
+        type: 'line',
+        data: {
+            labels: years,
+            datasets: [{
+                label: 'World Production (kb/d)',
+                data: totals,
+                borderColor: '#e8590c',
+                backgroundColor: 'rgba(232, 89, 12, 0.08)',
+                borderWidth: 2.5,
+                pointBackgroundColor: '#e8590c',
+                pointRadius: 3,
+                pointHoverRadius: 6,
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#1a1a1a',
+                    borderColor: 'rgba(232,89,12,0.4)',
+                    borderWidth: 1,
+                    titleColor: '#f0ede8',
+                    bodyColor: '#888880',
+                    callbacks: {
+                        label: function(ctx) {
+                            return ' ' + Number(ctx.raw).toLocaleString() + ' kb/d';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255,255,255,0.04)' },
+                    ticks: { color: '#555550' }
+                },
+                y: {
+                    grid: { color: 'rgba(255,255,255,0.04)' },
+                    ticks: {
+                        color: '#555550',
+                        callback: function(val) {
+                            return Number(val).toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    /* ===== CHART 2: Top 10 bar chart ===== */
+    new Chart(document.getElementById('topBarChart'), {
+        type: 'bar',
+        data: {
+            labels: top10Names,
+            datasets: [{
+                label: 'Avg Production (kb/d)',
+                data: top10Vals,
+                backgroundColor: 'rgba(232, 89, 12, 0.75)',
+                borderColor: '#e8590c',
+                borderWidth: 1,
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#1a1a1a',
+                    borderColor: 'rgba(232,89,12,0.4)',
+                    borderWidth: 1,
+                    titleColor: '#f0ede8',
+                    bodyColor: '#888880',
+                    callbacks: {
+                        label: function(ctx) {
+                            return ' ' + Number(ctx.raw).toLocaleString() + ' kb/d';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#888880' }
+                },
+                y: {
+                    grid: { color: 'rgba(255,255,255,0.04)' },
+                    ticks: {
+                        color: '#555550',
+                        callback: function(val) {
+                            return Number(val).toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    /* ===== CHART 3: Top 5 vs Bottom 5 ===== */
+    {% if top_5 and bottom_5 %}
+    new Chart(document.getElementById('compareBarChart'), {
+        type: 'bar',
+        data: {
+            labels: compareNames,
+            datasets: [{
+                label: 'Avg Production (kb/d)',
+                data: compareVals,
+                backgroundColor: compareColors,
+                borderColor: compareColors,
+                borderWidth: 1,
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#1a1a1a',
+                    borderColor: 'rgba(232,89,12,0.4)',
+                    borderWidth: 1,
+                    titleColor: '#f0ede8',
+                    bodyColor: '#888880',
+                    callbacks: {
+                        label: function(ctx) {
+                            return ' ' + Number(ctx.raw).toLocaleString() + ' kb/d';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#888880' }
+                },
+                y: {
+                    grid: { color: 'rgba(255,255,255,0.04)' },
+                    ticks: {
+                        color: '#555550',
+                        callback: function(val) {
+                            return Number(val).toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+    {% endif %}
+</script>
 {% endblock %}
