@@ -1,3 +1,5 @@
+* 6bdbfb5 : Redesign all pages with dark theme, charts, and improved UI
+* 13e452c : Update git log with branch and merge history
 *   ca62f14 : Merge feature/styling into main
 |\  
 | * adbdeda : Add project header comment to stylesheet
