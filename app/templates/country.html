@@ -1,219 +1,79 @@
+<!-- app/templates/country.html -->
+<!-- Detail page for a single country showing production data. -->
+
 {% extends 'base.html' %}
 
 {% block title %}{{ country.name }}{% endblock %}
 
 {% block content %}
 
-<!-- ===== PAGE HERO ===== -->
-<section class="page-hero">
-    <div class="page-hero-inner">
-        <p class="page-breadcrumb"><a href="{{ url_for('main.index') }}">Home</a> &rsaquo; {{ country.name }}</p>
+<p><a href="{{ url_for('main.index') }}">Home</a> &rsaquo; {{ country.name }}</p>
 
-        <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
-            {% if country.flag_url %}
-            <img src="{{ country.flag_url }}" alt="{{ country.name }} flag" class="country-flag-large">
-            {% endif %}
-            <div>
-                <h1 class="page-title">{{ country.name }}</h1>
-                {% if country.avg_production() and country.avg_production() > 0 %}
-                <p class="page-subtitle">Oil producing nation &mdash; data from 1992 to 2018</p>
-                {% else %}
-                <p class="page-subtitle">No recorded oil production</p>
-                {% endif %}
-            </div>
-        </div>
+<hr>
 
-        <!-- Stat strip -->
-        <div class="stat-strip">
-            <div class="stat-block">
-                <span class="stat-label">Avg Production (kb/d)</span>
-                <span class="stat-value">
-                    {% if country.avg_production() and country.avg_production() > 0 %}
-                        {{ "{:,.0f}".format(country.avg_production()) }}
-                    {% else %}
-                        0
-                    {% endif %}
-                </span>
-            </div>
-            <div class="stat-block">
-                <span class="stat-label">Peak Year</span>
-                <span class="stat-value">
-                    {% if country.peak_production() %}
-                        {{ country.peak_production().year }}
-                    {% else %}
-                        N/A
-                    {% endif %}
-                </span>
-            </div>
-            <div class="stat-block">
-                <span class="stat-label">Peak Output (kb/d)</span>
-                <span class="stat-value">
-                    {% if country.peak_production() %}
-                        {{ "{:,.0f}".format(country.peak_production().production) }}
-                    {% else %}
-                        N/A
-                    {% endif %}
-                </span>
-            </div>
-            <div class="stat-block">
-                <span class="stat-label">Years Recorded</span>
-                <span class="stat-value neutral">{{ productions | length }}</span>
-            </div>
-        </div>
-    </div>
-</section>
+<h1>{{ country.name }}</h1>
 
-<!-- ===== CONTENT ===== -->
-<div class="page-content">
-
-    {% if productions and country.avg_production() > 0 %}
-
-    <!-- Production line chart -->
-    <div class="chart-wrap">
-        <p class="chart-title">{{ country.name }} — Production by Year (thousand barrels/day)</p>
-        <canvas id="countryLineChart" height="100"></canvas>
-    </div>
-
-    {% else %}
-    <div class="alert alert-warning">
-        This country has no recorded oil production in the dataset.
-    </div>
-    {% endif %}
-
-    <!-- Yearly production table -->
-    {% if productions %}
-    <div class="table-wrap">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Year</th>
-                    <th>Production (thousand barrels/day)</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for record in productions %}
-                <tr {% if country.peak_production() and record.year == country.peak_production().year %}style="background: rgba(232,89,12,0.08);"{% endif %}>
-                    <td>
-                        {{ record.year }}
-                        {% if country.peak_production() and record.year == country.peak_production().year %}
-                        <span class="card-badge producer" style="margin-left:8px;">Peak</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if record.production %}
-                            {{ "{:,.0f}".format(record.production) }}
-                        {% else %}
-                            <span class="muted">No data</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% endif %}
-
-    <!-- Comparison with top 5 -->
-    <h2 style="font-family: var(--font-head); font-size: 32px; letter-spacing: 1px; color: var(--text); margin-bottom: 20px;">
-        How does {{ country.name }} compare?
-    </h2>
-    <div class="table-wrap">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Rank</th>
-                    <th>Country</th>
-                    <th>Avg Production (kb/d)</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for c in top_countries %}
-                <tr {% if c.id == country.id %}style="background: rgba(232,89,12,0.08);"{% endif %}>
-                    <td class="muted">{{ loop.index }}</td>
-                    <td>
-                        <a href="{{ url_for('main.country', country_id=c.id) }}">
-                            {% if c.id == country.id %}<strong>{{ c.name }}</strong>{% else %}{{ c.name }}{% endif %}
-                        </a>
-                        {% if c.id == country.id %}
-                        <span class="card-badge producer" style="margin-left:8px;">You are here</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ "{:,.0f}".format(c.avg_production()) }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <a href="{{ url_for('main.index') }}" class="back-link">&#8592; Back to all countries</a>
-
-</div>
-
-{% endblock %}
-
-{% block scripts %}
-{% if productions and country.avg_production() > 0 %}
-<script>
-    /* ===== Country production line chart ===== */
-    Chart.defaults.color = '#888880';
-    Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
-    Chart.defaults.font.family = "'DM Sans', sans-serif";
-
-    /* Build data arrays from Flask/Jinja */
-    var years = [{% for r in productions %}{{ r.year }}{% if not loop.last %},{% endif %}{% endfor %}];
-    var output = [{% for r in productions %}{{ r.production if r.production else 0 }}{% if not loop.last %},{% endif %}{% endfor %}];
-
-    new Chart(document.getElementById('countryLineChart'), {
-        type: 'line',
-        data: {
-            labels: years,
-            datasets: [{
-                label: 'Production (kb/d)',
-                data: output,
-                borderColor: '#e8590c',
-                backgroundColor: 'rgba(232, 89, 12, 0.08)',
-                borderWidth: 2.5,
-                pointBackgroundColor: '#e8590c',
-                pointRadius: 3,
-                pointHoverRadius: 6,
-                fill: true,
-                tension: 0.3
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: '#1a1a1a',
-                    borderColor: 'rgba(232,89,12,0.4)',
-                    borderWidth: 1,
-                    titleColor: '#f0ede8',
-                    bodyColor: '#888880',
-                    callbacks: {
-                        label: function(ctx) {
-                            return ' ' + Number(ctx.raw).toLocaleString() + ' kb/d';
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    grid: { color: 'rgba(255,255,255,0.04)' },
-                    ticks: { color: '#555550' }
-                },
-                y: {
-                    grid: { color: 'rgba(255,255,255,0.04)' },
-                    ticks: {
-                        color: '#555550',
-                        callback: function(val) {
-                            return Number(val).toLocaleString();
-                        }
-                    }
-                }
-            }
-        }
-    });
-</script>
+{% if country.avg_production() and country.avg_production() > 0 %}
+    <p>Oil producing nation — data from 1992 to 2018.</p>
+{% else %}
+    <p>No recorded oil production in the dataset.</p>
 {% endif %}
+
+<hr>
+
+<!-- Yearly production table -->
+{% if productions %}
+<h2>Production by Year</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Year</th>
+            <th>Production (thousand barrels/day)</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for record in productions %}
+        <tr>
+            <td>{{ record.year }}</td>
+            <td>
+                {% if record.production %}
+                    {{ "{:,.0f}".format(record.production) }}
+                {% else %}
+                    No data
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+<!-- Comparison with top 5 -->
+<h2>How does {{ country.name }} compare?</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Rank</th>
+            <th>Country</th>
+            <th>Avg Production (kb/d)</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for c in top_countries %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>
+                <a href="{{ url_for('main.country', country_id=c.id) }}">
+                    {% if c.id == country.id %}<strong>{{ c.name }}</strong>{% else %}{{ c.name }}{% endif %}
+                </a>
+                {% if c.id == country.id %}(this country){% endif %}
+            </td>
+            <td>{{ "{:,.0f}".format(c.avg_production()) }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="{{ url_for('main.index') }}" class="back-link">&larr; Back to all countries</a>
+
 {% endblock %}

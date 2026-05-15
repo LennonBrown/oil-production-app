@@ -1,136 +1,62 @@
+<!-- app/templates/compare.html -->
+<!-- Comparison page showing the top 10 oil producing countries. -->
+
 {% extends 'base.html' %}
 
 {% block title %}Compare{% endblock %}
-{% block nav_compare %}active{% endblock %}
 
 {% block content %}
 
-<section class="page-hero">
-    <div class="page-hero-inner">
-        <p class="page-breadcrumb"><a href="{{ url_for('main.index') }}">Home</a> &rsaquo; Compare</p>
-        <h1 class="page-title">Top 10 Producers</h1>
-        <p class="page-subtitle">The world's largest oil producing nations ranked by average daily output across all recorded years.</p>
-    </div>
-</section>
+<p><a href="{{ url_for('main.index') }}">Home</a> &rsaquo; Compare</p>
 
-<div class="page-content">
+<hr>
 
-    <!-- Horizontal bar chart -->
-    <div class="chart-wrap">
-        <p class="chart-title">Top 10 Countries — Average Daily Output (thousand barrels/day)</p>
-        <canvas id="compareChart" height="90"></canvas>
-    </div>
+<h1>Top 10 Producers</h1>
+<p>The world's largest oil producing nations ranked by average daily output across all recorded years.</p>
 
-    <!-- Country cards ranked -->
-    <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 40px;">
+<hr>
+
+<table>
+    <thead>
+        <tr>
+            <th>Rank</th>
+            <th>Country</th>
+            <th>Avg Production (kb/d)</th>
+            <th>Peak Year</th>
+            <th>Peak Output (kb/d)</th>
+        </tr>
+    </thead>
+    <tbody>
         {% for country in top_countries %}
-        <a href="{{ url_for('main.country', country_id=country.id) }}" class="compare-row">
-            <span class="compare-rank">{{ loop.index }}</span>
-
-            <div class="compare-flag">
-                {% if country.flag_url %}
-                    <img src="{{ country.flag_url }}" alt="{{ country.name }} flag" loading="lazy">
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>
+                <a href="{{ url_for('main.country', country_id=country.id) }}">
+                    {{ country.name }}
+                </a>
+            </td>
+            <td>{{ "{:,.0f}".format(country.avg_production()) }}</td>
+            <td>
+                {% if country.peak_production() %}
+                    {{ country.peak_production().year }}
                 {% else %}
-                    <span class="flag-placeholder">&#127988;</span>
+                    N/A
                 {% endif %}
-            </div>
-
-            <div class="compare-info">
-                <span class="compare-name">{{ country.name }}</span>
-                <span class="compare-meta">
-                    Peak: {% if country.peak_production() %}{{ country.peak_production().year }}{% else %}N/A{% endif %}
-                    &nbsp;&#183;&nbsp;
-                    Peak output: {% if country.peak_production() %}{{ "{:,.0f}".format(country.peak_production().production) }} kb/d{% else %}N/A{% endif %}
-                </span>
-            </div>
-
-            <!-- Inline production bar -->
-            {% set max_prod = top_countries[0].avg_production() %}
-            <div class="compare-bar-wrap">
-                <div class="compare-bar-fill" style="width: {{ ((country.avg_production() / max_prod) * 100)|round|int }}%"></div>
-            </div>
-
-            <div class="compare-val">
-                <span class="compare-num">{{ "{:,.0f}".format(country.avg_production()) }}</span>
-                <span class="compare-unit">kb/d</span>
-            </div>
-
-            <span class="card-arrow">&#8594;</span>
-        </a>
+            </td>
+            <td>
+                {% if country.peak_production() %}
+                    {{ "{:,.0f}".format(country.peak_production().production) }}
+                {% else %}
+                    N/A
+                {% endif %}
+            </td>
+        </tr>
         {% endfor %}
-    </div>
+    </tbody>
+</table>
 
-    <p class="results-count" style="margin-bottom: 40px;">
-        Rankings based on average daily production across all years 1992–2018.
-        Click any country to see its full production history.
-    </p>
+<p>Rankings based on average daily production across all years 1992–2018. Click any country to see its full production history.</p>
 
-    <a href="{{ url_for('main.index') }}" class="back-link">&#8592; Back to all countries</a>
-</div>
+<a href="{{ url_for('main.index') }}" class="back-link">&larr; Back to all countries</a>
 
-{% endblock %}
-
-{% block scripts %}
-<script>
-    Chart.defaults.color = '#888880';
-    Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
-    Chart.defaults.font.family = "'DM Sans', sans-serif";
-
-    var names  = [{% for c in top_countries %}"{{ c.name }}"{% if not loop.last %},{% endif %}{% endfor %}];
-    var values = [{% for c in top_countries %}{{ c.avg_production()|round(2) }}{% if not loop.last %},{% endif %}{% endfor %}];
-
-    new Chart(document.getElementById('compareChart'), {
-        type: 'bar',
-        data: {
-            labels: names,
-            datasets: [{
-                label: 'Avg Production (kb/d)',
-                data: values,
-                backgroundColor: [
-                    'rgba(232,89,12,0.95)',
-                    'rgba(232,89,12,0.85)',
-                    'rgba(232,89,12,0.75)',
-                    'rgba(232,89,12,0.68)',
-                    'rgba(232,89,12,0.60)',
-                    'rgba(232,89,12,0.53)',
-                    'rgba(232,89,12,0.46)',
-                    'rgba(232,89,12,0.40)',
-                    'rgba(232,89,12,0.34)',
-                    'rgba(232,89,12,0.28)'
-                ],
-                borderColor: '#e8590c',
-                borderWidth: 1,
-                borderRadius: 6
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: '#1a1a1a',
-                    borderColor: 'rgba(232,89,12,0.4)',
-                    borderWidth: 1,
-                    titleColor: '#f0ede8',
-                    bodyColor: '#888880',
-                    callbacks: {
-                        label: function(ctx) {
-                            return ' ' + Number(ctx.raw).toLocaleString() + ' kb/d';
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: { grid: { display: false }, ticks: { color: '#888880' } },
-                y: {
-                    grid: { color: 'rgba(255,255,255,0.04)' },
-                    ticks: {
-                        color: '#555550',
-                        callback: function(val) { return Number(val).toLocaleString(); }
-                    }
-                }
-            }
-        }
-    });
-</script>
 {% endblock %}

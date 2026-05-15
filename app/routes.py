@@ -1,116 +1,50 @@
 # app/routes.py
-# This file contains all the URL routes for the application.
-# Routes decide what happens when a user visits a specific page.
-# This follows the Controller part of the MVC pattern from L14.
-
 from flask import Blueprint, render_template, request, abort
 
-# Create a Blueprint called 'main'
-# All our main routes will be registered on this blueprint
 main = Blueprint('main', __name__)
 
 
 @main.route('/')
 def index():
-    """
-    Home page — shows a list of all countries.
-    Supports search by name and filter by producer status.
-    """
     from app.models import Country
-
-    # Get search and filter from the URL e.g. /?search=Saudi&filter=producers
     search = request.args.get('search', '')
     filter = request.args.get('filter', 'all')
-
-    # Base query — filter by name if search term provided
     if search:
-        # ilike means case-insensitive search
         countries = Country.query.filter(
             Country.name.ilike(f'%{search}%')
         ).order_by(Country.name).all()
     else:
-        # No search — return all countries alphabetically
         countries = Country.query.order_by(Country.name).all()
-
-    # Apply producer/non-producer filter on top of search results
     if filter == 'producers':
         countries = [c for c in countries if c.avg_production() > 0]
     elif filter == 'non_producers':
         countries = [c for c in countries if c.avg_production() == 0]
-
-    return render_template('index.html',
-                           countries=countries,
-                           search=search,
-                           filter=filter)
+    return render_template('index.html', countries=countries, search=search, filter=filter)
 
 
 @main.route('/country/<int:country_id>')
 def country(country_id):
-    """
-    Detail page for a single country.
-    Shows all yearly production data and some statistics.
-    """
-    # Import here to avoid circular imports
     from app.models import Country, Production
-
-    # Get the country or return 404 if it doesn't exist
     country = Country.query.get_or_404(country_id)
-
-    # Get all production records for this country ordered by year
-    productions = Production.query.filter_by(
-        country_id=country_id
-    ).order_by(Production.year).all()
-
-    # Get top 5 producing countries for comparison
+    productions = Production.query.filter_by(country_id=country_id).order_by(Production.year).all()
     all_countries = Country.query.all()
-    top_countries = sorted(
-        all_countries,
-        key=lambda c: c.avg_production(),
-        reverse=True
-    )[:5]
-
-    return render_template('country.html',
-                           country=country,
-                           productions=productions,
-                           top_countries=top_countries)
+    top_countries = sorted(all_countries, key=lambda c: c.avg_production(), reverse=True)[:5]
+    return render_template('country.html', country=country, productions=productions, top_countries=top_countries)
 
 
 @main.route('/compare')
 def compare():
-    """
-    Comparison page — shows top 10 producing countries side by side.
-    This helps satisfy criterion 2 for data comparison.
-    """
-    # Import here to avoid circular imports
     from app.models import Country
-
     all_countries = Country.query.all()
-
-    # Sort by average production and take top 10
-    top_countries = sorted(
-        all_countries,
-        key=lambda c: c.avg_production(),
-        reverse=True
-    )[:10]
-
-    return render_template('compare.html',
-                           top_countries=top_countries)
+    top_countries = sorted(all_countries, key=lambda c: c.avg_production(), reverse=True)[:10]
+    return render_template('compare.html', top_countries=top_countries)
 
 
 @main.route('/oil-price')
 def oil_price():
-    """
-    Oil price page - fetches current WTI crude oil price
-    from the EIA (U.S. Energy Information Administration) API.
-    This is the same organisation that produced our dataset.
-    """
     import requests
     import os
-
-    # Get the EIA API key from environment variables
     api_key = os.environ.get('EIA_API_KEY')
-
-    # EIA API endpoint for WTI crude oil weekly spot price
     url = (
         f'https://api.eia.gov/v2/petroleum/pri/spt/data/'
         f'?api_key={api_key}'
@@ -121,21 +55,12 @@ def oil_price():
         f'&sort[0][direction]=desc'
         f'&length=1'
     )
-
     price_data = None
     error = None
-
     try:
-        # Make the API request with a timeout of 10 seconds
         response = requests.get(url, timeout=10)
         data = response.json()
-
-        # Check if we got valid data back
-        if ('response' in data and
-                'data' in data['response'] and
-                len(data['response']['data']) > 0):
-
-            # Get the most recent price entry
+        if ('response' in data and 'data' in data['response'] and len(data['response']['data']) > 0):
             latest = data['response']['data'][0]
             price_data = {
                 'price': round(float(latest['value']), 2),
@@ -144,78 +69,45 @@ def oil_price():
             }
         else:
             error = 'Price data currently unavailable.'
-
     except Exception as e:
-        # Handle any network or parsing errors gracefully
         print("EIA API ERROR:", e)
         error = 'Could not fetch oil price at this time.'
-
-    return render_template('oil_price.html',
-                           price_data=price_data,
-                           error=error)
+    return render_template('oil_price.html', price_data=price_data, error=error)
 
 
 @main.route('/analysis')
 def analysis():
-    """
-    Analysis page - shows global oil production trends
-    and statistics across all countries and years.
-    This satisfies criterion 2 for detailed data analysis.
-    """
     from app.models import Country, Production
     from sqlalchemy import func
     from app import db
-
-    # Get total world production per year
-    # We sum all countries production for each year
     yearly_totals = db.session.query(
         Production.year,
         func.sum(Production.production).label('total')
-    ).filter(
-        Production.production.isnot(None)
-    ).group_by(
-        Production.year
-    ).order_by(
-        Production.year
-    ).all()
-
-    # Find the peak production year globally
-    # Handle empty database gracefully for testing
-    peak_year = max(
-        yearly_totals, key=lambda x: x.total
-    ) if yearly_totals else None
-
-    # Get all countries for analysis
+    ).filter(Production.production.isnot(None)).group_by(Production.year).order_by(Production.year).all()
+    peak_year = max(yearly_totals, key=lambda x: x.total) if yearly_totals else None
     all_countries = Country.query.all()
-
-    # Sort by average production highest first
-    sorted_countries = sorted(
-        all_countries,
-        key=lambda c: c.avg_production(),
-        reverse=True
-    )
-
-    # Top 5 producing countries
+    sorted_countries = sorted(all_countries, key=lambda c: c.avg_production(), reverse=True)
     top_5 = sorted_countries[:5]
-
-    # Bottom 5 producers excluding zero producers
-    producers_only = [c for c in all_countries
-                      if c.avg_production() > 0]
-    bottom_5 = sorted(
-        producers_only,
-        key=lambda c: c.avg_production()
-    )[:5]
-
-    # Total number of producing countries
+    producers_only = [c for c in all_countries if c.avg_production() > 0]
+    bottom_5 = sorted(producers_only, key=lambda c: c.avg_production())[:5]
     total_producers = len(producers_only)
-
-    # Total number of non producing countries
     total_non_producers = len(all_countries) - total_producers
+    return render_template('analysis.html', yearly_totals=yearly_totals, peak_year=peak_year, top_5=top_5, bottom_5=bottom_5, total_producers=total_producers, total_non_producers=total_non_producers)
 
-    return render_template('analysis.html',
-                           yearly_totals=yearly_totals,
-                           peak_year=peak_year,
-                           top_5=top_5,
-                           bottom_5=bottom_5,
-                           total_producers=total_producers,
-                           total_non_producers=total_non_producers)
+
+@main.route('/regions')
+def regions():
+    from app.models import Region
+    all_regions = Region.query.order_by(Region.name).all()
+    all_regions = sorted(all_regions, key=lambda r: r.total_avg_production(), reverse=True)
+    return render_template('regions.html', regions=all_regions)
+
+
+@main.route('/region/<int:region_id>')
+def region(region_id):
+    from app.models import Region
+    region = Region.query.get_or_404(region_id)
+    producers = sorted(region.producing_countries(), key=lambda c: c.avg_production(), reverse=True)
+    return render_template('region.html', region=region, producers=producers)
+
+print("DEBUG: all routes loaded")

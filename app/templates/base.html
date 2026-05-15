@@ -1,67 +1,29 @@
+<!-- app/templates/base.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}OilTracker{% endblock %} | Global Oil Intelligence</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <title>{% block title %}Oil Production App{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 
-    <nav class="navbar">
-        <div class="nav-inner">
-            <a href="{{ url_for('main.index') }}" class="nav-brand">
-                <span class="oil-drop-logo"></span>
-                <span class="brand-text">OilTracker</span>
-            </a>
-            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
-                <span></span><span></span><span></span>
-            </button>
-            <ul class="nav-links" id="navLinks">
-                <li><a href="{{ url_for('main.index') }}" class="nav-link {% block nav_home %}{% endblock %}">Home</a></li>
-                <li><a href="{{ url_for('main.regions') }}" class="nav-link {% block nav_regions %}{% endblock %}">Regions</a></li>
-                <li><a href="{{ url_for('main.compare') }}" class="nav-link {% block nav_compare %}{% endblock %}">Compare</a></li>
-                <li><a href="{{ url_for('main.analysis') }}" class="nav-link {% block nav_analysis %}{% endblock %}">Analysis</a></li>
-                <li><a href="{{ url_for('main.oil_price') }}" class="nav-link nav-link-price {% block nav_price %}{% endblock %}">&#9679; Live Price</a></li>
-            </ul>
-        </div>
+    <nav>
+        <a href="{{ url_for('main.index') }}">Home</a>
+        <a href="{{ url_for('main.regions') }}">Regions</a>
+        <a href="{{ url_for('main.compare') }}">Compare</a>
+        <a href="{{ url_for('main.analysis') }}">Analysis</a>
     </nav>
 
     <main>
-        {% block content %}{% endblock %}
+        {% block content %}
+        {% endblock %}
     </main>
 
-    <footer class="site-footer">
-        <div class="footer-inner">
-            <div class="footer-brand">
-                <span class="oil-drop-logo small"></span>
-                <span class="brand-text">OilTracker</span>
-            </div>
-            <p class="footer-tagline">Global oil production intelligence since 1992</p>
-            <p class="footer-source">Data: U.S. Energy Information Administration (EIA) &mdash; Production figures in thousand barrels per day</p>
-            <div class="footer-links">
-                <a href="{{ url_for('main.index') }}">Countries</a>
-                <a href="{{ url_for('main.regions') }}">Regions</a>
-                <a href="{{ url_for('main.analysis') }}">Analysis</a>
-                <a href="{{ url_for('main.oil_price') }}">Live Price</a>
-            </div>
-        </div>
+    <footer>
+        <p>Data source: U.S. Energy Information Administration (EIA)</p>
     </footer>
-
-    <script>
-        document.getElementById('navToggle').addEventListener('click', function () {
-            document.getElementById('navLinks').classList.toggle('open');
-        });
-        document.querySelectorAll('.nav-link').forEach(function (link) {
-            link.addEventListener('click', function () {
-                document.getElementById('navLinks').classList.remove('open');
-            });
-        });
-    </script>
 
     {% block scripts %}{% endblock %}
 
